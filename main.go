@@ -29,6 +29,8 @@ var (
 	esIndexDateFormat = "2006.01"
 	esIndexName       = "alertmanager"
 	esURL             string
+	esUser            string
+	esPwd             string
 	revision          = "unknown"
 	versionString     = fmt.Sprintf("%s %s (%s)", application, revision, runtime.Version())
 
@@ -62,6 +64,8 @@ func main() {
 	flag.StringVar(&esIndexName, "esIndexName", esIndexName, "Elasticsearch index name")
 	flag.StringVar(&esType, "esType", esType, "Elasticsearch document type ('_type')")
 	flag.StringVar(&esURL, "esURL", esURL, "Elasticsearch HTTP URL")
+	flag.StringVar(&esUser, "esUser", esUser, "Elasticsearch User")
+	flag.StringVar(&esPwd, "esPwd", esPwd, "Elasticsearch Password")
 	flag.BoolVar(&showVersion, "version", false, "Print version number and exit")
 	flag.Parse()
 
@@ -125,7 +129,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if msg.Version != supportedWebhookVersion {
 		notificationsInvalid.Inc()
-		err := fmt.Errorf("Do not understand webhook version %q, only version %q is supported.", msg.Version, supportedWebhookVersion)
+		err := fmt.Errorf("Do not understand webhook version %q, only version %q is supported", msg.Version, supportedWebhookVersion)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Print(err)
 		return
@@ -152,6 +156,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Print(err)
 		return
+	}
+
+	if esUser != "" {
+		req.SetBasicAuth(esUser, esPwd)
 	}
 
 	req.Header.Set("User-Agent", versionString)
@@ -185,12 +193,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 type notification struct {
 	Alerts []struct {
-		Annotations  map[string]string `json:"annotations"`
-		EndsAt       time.Time         `json:"endsAt"`
-		GeneratorURL string            `json:"generatorURL"`
-		Labels       map[string]string `json:"labels"`
-		StartsAt     time.Time         `json:"startsAt"`
-		Status       string            `json:"status"`
+		Annotations map[string]string `json:"annotations"`
+		EndsAt      time.Time         `json:"endsAt"`
+		// generatorURL is useless for us
+		// GeneratorURL string            `json:"generatorURL"`
+		Labels   map[string]string `json:"labels"`
+		StartsAt time.Time         `json:"startsAt"`
+		Status   string            `json:"status"`
 	} `json:"alerts"`
 	CommonAnnotations map[string]string `json:"commonAnnotations"`
 	CommonLabels      map[string]string `json:"commonLabels"`

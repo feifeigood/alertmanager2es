@@ -62,8 +62,8 @@ To build alertmanager2es, you'll need:
 
 ## Building
 
-    go get -u github.com/cloudflare/alertmanager2es
-    cd $GOPATH/src/github.com/cloudflare/alertmanager2es
+    go get -u github.com/feifeigood/alertmanager2es
+    cd $GOPATH/src/github.com/feifeigood/alertmanager2es
     make
 
 ## Configuration

@@ -6,4 +6,4 @@ go:
 
 matrix:
   allow_failures:
-  - go: master
+    - go: master
